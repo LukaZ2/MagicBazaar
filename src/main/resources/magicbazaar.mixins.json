@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "me.magicbazaar.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"ServerInitMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

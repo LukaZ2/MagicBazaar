@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "magicbazaar",
+	"version": "${version}",
+	"name": "Magic Bazaar",
+	"description": "",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"me.magicbazaar.MagicBazaar"
+		],
+		"client": [
+			"me.magicbazaar.MagicBazaarClient"
+		]
+	},
+	"mixins": [
+		"magicbazaar.mixins.json",
+		{
+			"config": "magicbazaar.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21.8",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

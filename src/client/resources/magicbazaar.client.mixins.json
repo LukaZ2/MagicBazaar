@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "me.magicbazaar.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "GenericContainerScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
