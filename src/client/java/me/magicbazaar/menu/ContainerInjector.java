@@ -1,26 +1,38 @@
 package me.magicbazaar.menu;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.minecraft.screen.GenericContainerScreenHandler;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ContainerInjector {
 
-    private static List<InjectedContainerElement> elements = new ArrayList<>();
-
-    public static void register(InjectedContainerElement element) {
-        elements.add(element);
+    @Getter
+    @AllArgsConstructor
+    public static class InjectedContainerScreenEntry {
+        private IContainerMatcher matcher;
+        private Class<? extends InjectedContainerScreen<?>> screenClazz;
+        private Class<? extends ScreenHandler> screenHandlerClazz;
     }
 
-    public static List<Drawable> handleNewContainer(GenericContainerScreen screen) {
-        List<Drawable> drawables = new ArrayList<>();
-        for(InjectedContainerElement element : elements) {
-            if(!element.match(screen)) continue;
-            drawables.addAll(element.getDrawables());
-        }
-        return drawables;
+    private final static List<InjectedContainerScreenEntry> entries = new ArrayList<>();
+
+    public static void register(IContainerMatcher matcher, Class<? extends InjectedContainerScreen<?>> screenClazz, Class<? extends ScreenHandler> screenHandlerClazz) {
+        entries.add(new InjectedContainerScreenEntry(matcher, screenClazz, screenHandlerClazz));
+    }
+
+    public static InjectedContainerScreenEntry match(Text title, ScreenHandler screenHandler) {
+        return entries.stream()
+                .filter(entry -> entry.getMatcher().match(title, screenHandler))
+                .findFirst()
+                .orElse(null);
     }
 
 }
