@@ -1,10 +1,10 @@
 package me.magicbazaar.config;
 
-import lombok.Data;
-
-@Data
 public class MagicBazaarConfig {
 
-    private String apiKey = null;
+    public long BAZAAR_API_REFRESH_INTERVAL = 5000;
 
+    public synchronized MagicBazaarConfig sync() {
+        return this;
+    }
 }

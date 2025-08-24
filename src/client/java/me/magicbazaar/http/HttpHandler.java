@@ -1,16 +1,13 @@
-package me.magicbazaar.api;
+package me.magicbazaar.http;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.http.client.HttpResponseException;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.CharBuffer;
 
 public class HttpHandler {
 

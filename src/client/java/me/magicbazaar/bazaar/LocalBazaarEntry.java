@@ -1,17 +1,54 @@
 package me.magicbazaar.bazaar;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.*;
+
+import java.text.NumberFormat;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class LocalBazaarEntry {
     public enum Type {
         BUY, SELL
     }
 
-    private String itemId;
-    private int amount;
-    private Type type;
-    private double price;
+    private final String itemId;
+    private final String itemName;
+    private final int amount;
+    private final Type type;
+    private final double price;
+
+    private int outbidAmount = 0;
+
+    public void setOutbidAmount(int outbidAmount) {
+        this.outbidAmount = outbidAmount;
+        totalAmountBeforeTopString = String.format("%,d", totalAmountBeforeTop());
+    }
+
+    private int matchedAmount = 0;
+
+    public void setMatchedAmount(int matchedAmount) {
+        this.matchedAmount = matchedAmount;
+        totalAmountBeforeTopString = String.format("%,d", totalAmountBeforeTop());
+    }
+
+    private double topPrice = 0;
+
+    public void setTopPrice(double topPrice) {
+        this.topPrice = topPrice;
+        topPriceString = NumberFormat.getCurrencyInstance().format(topPrice).substring(1);
+    }
+
+    private String totalAmountBeforeTopString;
+    private String topPriceString;
+
+    public int totalAmountBeforeTop() {
+        return getOutbidAmount() + getMatchedAmount();
+    }
+
+    public String getRoundedPercentageFromTop() {
+        double raw = (topPrice-price)/price;
+        double rounded = (double) Math.round(raw*100) / 100;
+        return (type == Type.BUY ? "+" : "") + String.valueOf(rounded) + "%";
+    }
+
 }

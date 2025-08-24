@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.magicbazaar.MagicBazaarClient;
-import me.magicbazaar.api.HttpHandler;
+import me.magicbazaar.http.HttpHandler;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.LoreComponent;
 import net.minecraft.item.ItemStack;
