@@ -30,6 +30,7 @@ public class LocalBazaarState {
                 if(e1.getType() == LocalBazaarEntry.Type.BUY) return 1;
                 return -1;
             });
+            BazaarUtils.scanEntries(localEntries);
         }
     }
 }

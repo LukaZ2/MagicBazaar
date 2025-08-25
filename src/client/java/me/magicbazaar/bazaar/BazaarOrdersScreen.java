@@ -30,13 +30,19 @@ public class BazaarOrdersScreen extends InjectedContainerScreen.GenericContainer
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         super.render(context, mouseX, mouseY, deltaTicks);
-        context.drawText(textRenderer, "Bazaar Orders", 0, 0, Colors.WHITE, true);
+        context.drawText(textRenderer, "Bazaar Orders:", 1, 0, Colors.WHITE, true);
         renderOrders(context, mouseX, mouseY, deltaTicks);
     }
 
     public void renderOrders(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         synchronized (MagicBazaarClient.getLocalBazaarState().getLocalEntries()) {
             List<LocalBazaarEntry> entries = MagicBazaarClient.getLocalBazaarState().getLocalEntries();
+
+            if(entries.isEmpty()) {
+                context.drawText(textRenderer, "None!", 1, getTextRenderer().fontHeight+1, Colors.RED, true);
+                return;
+            }
+
             for (int i = 0; i < entries.size(); i++) {
                 int y = (i+1)*(textRenderer.fontHeight+1);
                 LocalBazaarEntry entry = entries.get(i);
