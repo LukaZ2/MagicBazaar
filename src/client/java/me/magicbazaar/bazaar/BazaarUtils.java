@@ -148,8 +148,8 @@ public class BazaarUtils {
                     int amount = orderObject.get("amount").getAsInt();
                     int orders = orderObject.get("orders").getAsInt();
 
-                    if (entry.getPrice() == price && orders > similarEntries.size()) {
-                        matchedAmount += amount;
+                    if (entry.getPrice() == price) {
+                        if(orders > similarEntries.size()) matchedAmount += amount;
                         continue;
                     }
 
