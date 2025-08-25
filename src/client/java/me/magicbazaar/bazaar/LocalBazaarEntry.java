@@ -48,7 +48,13 @@ public class LocalBazaarEntry {
     public String getRoundedPercentageFromTop() {
         double raw = (topPrice-price)/price;
         double rounded = (double) Math.round(raw*100) / 100;
-        return (type == Type.BUY ? "+" : "") + String.valueOf(rounded) + "%";
+        return (type == Type.BUY ? "+" : "") + String.valueOf(rounded*100) + "%";
+    }
+
+    public boolean isSimilar(LocalBazaarEntry other) {
+        return other.getItemId().equals(this.getItemId())
+                && other.getPrice() == this.getPrice()
+                && other.getType() == this.getType();
     }
 
 }
