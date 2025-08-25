@@ -12,6 +12,8 @@ import net.minecraft.item.ItemStack;
 import org.apache.http.client.HttpResponseException;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -48,7 +50,7 @@ public class BazaarUtils {
             bazaarCacheLock.lock();
             bazaarCache = response.get("products").getAsJsonObject();
             synchronized (MagicBazaarClient.getLocalBazaarState().getLocalEntries()) {
-                MagicBazaarClient.getLocalBazaarState().getLocalEntries().forEach(BazaarUtils::scanEntry);
+                scanEntries(MagicBazaarClient.getLocalBazaarState().getLocalEntries());
             }
         } finally {
             bazaarCacheLock.unlock();
@@ -65,14 +67,15 @@ public class BazaarUtils {
             }
         }
     }
+
     public static void refreshCacheLoopAsync() {
         new Thread(BazaarUtils::refreshCacheLoop).start();
     }
 
     public static LocalBazaarEntry parseItem(ItemStack itemStack) {
-        if(itemStack.getName().getString().isBlank()) return null;
+        if (itemStack.getName().getString().isBlank()) return null;
         Matcher headerMatcher = ITEM_HEADER_REGEX.matcher(itemStack.getName().getString());
-        if(!headerMatcher.matches()) return null;
+        if (!headerMatcher.matches()) return null;
 
         LocalBazaarEntry.Type type;
         String itemId;
@@ -80,7 +83,7 @@ public class BazaarUtils {
         try {
             type = LocalBazaarEntry.Type.valueOf(headerMatcher.group(1));
             itemId = ItemUtils.getMappedId(itemName);
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             return null;
         } catch (ItemNameMapping.NotFoundException e) {
             MagicBazaarClient.warn(e.getMessage());
@@ -89,8 +92,8 @@ public class BazaarUtils {
 
         int amount = 0;
         double price = 0;
-        for(String line : ItemUtils.getLoreRaw(itemStack)) {
-            if(FILLED_REGEX.matcher(line).matches()) return null;
+        for (String line : ItemUtils.getLoreRaw(itemStack)) {
+            if (FILLED_REGEX.matcher(line).matches()) return null;
 
             try {
                 Matcher amountMatcher = OFFER_AMOUNT_REGEX.matcher(line);
@@ -105,55 +108,64 @@ public class BazaarUtils {
             }
         }
 
-        var entry = new LocalBazaarEntry(itemId, itemName, amount, type, price);
-        scanEntry(entry);
-        return entry;
+        return new LocalBazaarEntry(itemId, itemName, amount, type, price);
     }
 
-    public static void scanEntry(LocalBazaarEntry entry) {
+    public static void scanEntries(List<LocalBazaarEntry> entries) {
+
         try {
             bazaarCacheLock.lock();
-            if(bazaarCache == null) return;
-            JsonObject bazaarItemInfo = getBazaarCache().get(entry.getItemId()).getAsJsonObject();
-            if(bazaarItemInfo == null) {
-                MagicBazaarClient.warn("No data found for product: \"" + entry.getItemId() + "\".");
-                return;
-            }
-            JsonArray orderSummary = null;
-            switch (entry.getType()) {
-                case BUY -> orderSummary = bazaarItemInfo.get("sell_summary").getAsJsonArray(); //yes this is correct
-                case SELL -> orderSummary = bazaarItemInfo.get("buy_summary").getAsJsonArray();
-            }
+            if (bazaarCache == null) return;
 
-            int outbidAmount = 0;
-            int matchedAmount = 0;
-            double topPrice = entry.getPrice();
+            List<LocalBazaarEntry> skip = new ArrayList<>();
 
-            for(JsonElement orderElement : orderSummary.asList()) {
-                JsonObject orderObject = orderElement.getAsJsonObject();
-                double price = orderObject.get("pricePerUnit").getAsDouble();
-                if(entry.getType() == LocalBazaarEntry.Type.BUY && price < entry.getPrice()) continue;
-                if(entry.getType() == LocalBazaarEntry.Type.SELL && price > entry.getPrice()) continue;
+            for (LocalBazaarEntry entry : entries) {
+                if(skip.contains(entry)) continue;
 
-                int amount = orderObject.get("amount").getAsInt();
-                int orders = orderObject.get("orders").getAsInt();
-
-                if(entry.getPrice() == price && orders != 1) {
-                    matchedAmount += amount;
-                    continue;
+                JsonObject bazaarItemInfo = getBazaarCache().get(entry.getItemId()).getAsJsonObject();
+                if (bazaarItemInfo == null) {
+                    MagicBazaarClient.warn("No data found for product: \"" + entry.getItemId() + "\".");
+                    return;
                 }
-
-                outbidAmount += amount;
+                JsonArray orderSummary = null;
                 switch (entry.getType()) {
-                    case BUY -> topPrice = Math.max(price, topPrice);
-                    case SELL -> topPrice = Math.min(price, topPrice);
+                    case BUY -> orderSummary = bazaarItemInfo.get("sell_summary").getAsJsonArray(); //yes this is correct
+                    case SELL -> orderSummary = bazaarItemInfo.get("buy_summary").getAsJsonArray();
                 }
+
+                List<LocalBazaarEntry> similarEntries = entries.stream().filter(e -> e.isSimilar(entry)).toList();
+
+                int outbidAmount = 0;
+                int matchedAmount = 0;
+                double topPrice = entry.getPrice();
+
+                for (JsonElement orderElement : orderSummary.asList()) {
+                    JsonObject orderObject = orderElement.getAsJsonObject();
+                    double price = orderObject.get("pricePerUnit").getAsDouble();
+                    if (entry.getType() == LocalBazaarEntry.Type.BUY && price < entry.getPrice()) continue;
+                    if (entry.getType() == LocalBazaarEntry.Type.SELL && price > entry.getPrice()) continue;
+
+                    int amount = orderObject.get("amount").getAsInt();
+                    int orders = orderObject.get("orders").getAsInt();
+
+                    if (entry.getPrice() == price && orders > similarEntries.size()) {
+                        matchedAmount += amount;
+                        continue;
+                    }
+
+                    outbidAmount += amount;
+                    topPrice = entry.getType() == LocalBazaarEntry.Type.BUY ? Math.max(topPrice, price) : Math.min(topPrice, price);
+                }
+
+                for(LocalBazaarEntry similarEntry : similarEntries) {
+                    similarEntry.setTopPrice(topPrice);
+                    similarEntry.setOutbidAmount(outbidAmount);
+                    similarEntry.setMatchedAmount(matchedAmount);
+                }
+
+                skip.addAll(similarEntries);
+
             }
-
-            entry.setOutbidAmount(outbidAmount);
-            entry.setMatchedAmount(matchedAmount);
-            entry.setTopPrice(topPrice);
-
         } finally {
             bazaarCacheLock.unlock();
         }

@@ -72,6 +72,7 @@ public class MagicBazaarClient implements ClientModInitializer, ClientTickEvents
         }
         try {
             config = new Gson().fromJson(new FileReader(configFile), MagicBazaarConfig.class);
+            if(config == null) config = new MagicBazaarConfig();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
