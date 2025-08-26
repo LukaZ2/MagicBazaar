@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import lombok.Getter;
 import me.magicbazaar.bazaar.BazaarOrdersScreen;
 import me.magicbazaar.bazaar.BazaarUtils;
+import me.magicbazaar.bazaar.LocalBazaarEntry;
 import me.magicbazaar.bazaar.LocalBazaarState;
 import me.magicbazaar.commands.MagicBazaarCommand;
 import me.magicbazaar.config.MagicBazaarConfig;
@@ -107,6 +108,7 @@ public class MagicBazaarClient implements ClientModInitializer, ClientTickEvents
             synchronized (msgQueue) {
                 msgQueue.add(msg);
             }
+            return;
         }
         mc.inGameHud.getChatHud().addMessage(msg);
     }
