@@ -10,6 +10,9 @@ public class LocalBazaarEntry {
     public enum Type {
         BUY, SELL
     }
+    public enum State {
+        TOP, MATCHED, OUTBID
+    }
 
     private final String itemId;
     private final String itemName;
@@ -43,6 +46,12 @@ public class LocalBazaarEntry {
 
     public int totalAmountBeforeTop() {
         return getOutbidAmount() + getMatchedAmount();
+    }
+
+    public State getState() {
+        if(getOutbidAmount() > 0) return State.OUTBID;
+        if(getMatchedAmount() > 0) return State.MATCHED;
+        return State.TOP;
     }
 
     public String getRoundedPercentageFromTop() {

@@ -50,7 +50,7 @@ public class BazaarUtils {
             bazaarCacheLock.lock();
             bazaarCache = response.get("products").getAsJsonObject();
             synchronized (MagicBazaarClient.getLocalBazaarState().getLocalEntries()) {
-                scanEntries(MagicBazaarClient.getLocalBazaarState().getLocalEntries());
+                scanEntries(MagicBazaarClient.getLocalBazaarState().getLocalEntries(), MagicBazaarClient.getConfigSync().OFFER_UPDATE_NOTIFY);
             }
         } finally {
             bazaarCacheLock.unlock();
@@ -112,6 +112,9 @@ public class BazaarUtils {
     }
 
     public static void scanEntries(List<LocalBazaarEntry> entries) {
+        scanEntries(entries, false);
+    }
+    public static void scanEntries(List<LocalBazaarEntry> entries, boolean notify) {
 
         try {
             bazaarCacheLock.lock();
@@ -155,6 +158,10 @@ public class BazaarUtils {
 
                     outbidAmount += amount;
                     topPrice = entry.getType() == LocalBazaarEntry.Type.BUY ? Math.max(topPrice, price) : Math.min(topPrice, price);
+                }
+
+                if(notify && entry.getState() == LocalBazaarEntry.State.TOP) {
+                    if(outbidAmount > 0 || matchedAmount > 0) MagicBazaarClient.sendMessage("Your order for \"" + entry.getItemName() + "\" is no longer on top.");
                 }
 
                 for(LocalBazaarEntry similarEntry : similarEntries) {
