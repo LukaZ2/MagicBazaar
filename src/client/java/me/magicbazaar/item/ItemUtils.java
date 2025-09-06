@@ -128,8 +128,6 @@ public class ItemUtils {
         for(int i = min; i <= max; i++) {
             var mapping = new ItemNameMapping("ENCHANTMENT_" + id + "_" + i, formatCapitals(name) + " " + toRomanNumeral(i));
             mappings.add(mapping);
-            MagicBazaarClient.LOGGER.info(mapping.getItemId());
-            MagicBazaarClient.LOGGER.info(mapping.getDisplayName());
         }
         return mappings;
     }
