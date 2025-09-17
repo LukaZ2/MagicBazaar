@@ -125,11 +125,12 @@ public class BazaarUtils {
             for (LocalBazaarEntry entry : entries) {
                 if(skip.contains(entry)) continue;
 
-                JsonObject bazaarItemInfo = getBazaarCache().get(entry.getItemId()).getAsJsonObject();
-                if (bazaarItemInfo == null) {
+                JsonElement element = getBazaarCache().get(entry.getItemId());
+                if (element == null) {
                     MagicBazaarClient.warn("No data found for product: \"" + entry.getItemId() + "\".");
                     return;
                 }
+                JsonObject bazaarItemInfo = getBazaarCache().get(entry.getItemId()).getAsJsonObject();
                 JsonArray orderSummary = null;
                 switch (entry.getType()) {
                     case BUY -> orderSummary = bazaarItemInfo.get("sell_summary").getAsJsonArray(); //yes this is correct
